@@ -2,205 +2,596 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monthly Work Report by Arya x Etho AI</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2d3436">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roommate Task Manager</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js" defer></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <style>
+        /* === CSS VARIABLES & THEMING === */
         :root {
             --bg-color: #f4f7f6;
             --card-bg: #ffffff;
             --text-main: #2d3436;
-            --aryan: #0984e3;
-            --yash: #00b894;
-            --shivek: #e67e22;
-            --shadow: 0 10px 20px rgba(0,0,0,0.05);
-            --radius: 15px;
+            --text-muted: #636e72;
+            
+            /* Member Colors */
+            --aryan: #3498db;   /* Blue */
+            --yash: #2ecc71;    /* Green */
+            --shivek: #e67e22;  /* Orange */
+            --lazy: #95a5a6;    /* Gray for skipped */
+            
+            --shadow: 0 8px 20px rgba(0,0,0,0.06);
+            --radius: 16px;
         }
 
-        /* Scrolling Fixes */
-        html, body {
-            min-height: 100vh;
-            overflow-x: hidden;
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-main); 
-            padding: 20px; 
-            padding-bottom: 80px; /* Extra space to fix bottom cut-off on mobile */
-            -webkit-tap-highlight-color: transparent; 
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            padding-bottom: 60px;
+            line-height: 1.6;
         }
 
-        .container { max-width: 900px; margin: 0 auto; }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* === HEADER & NOTIFICATIONS === */
+        header { text-align: center; margin-bottom: 30px; position: relative; }
+        h1 { font-size: 2.2rem; margin-bottom: 10px; color: #2d3436; }
         
-        header { text-align: center; margin-bottom: 30px; }
-        h1 { font-size: 1.5rem; font-weight: 800; color: #2d3436; margin-bottom: 10px; }
-        
+        .notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: #2d3436; color: white; padding: 12px 24px;
+            border-radius: 50px; font-weight: bold; box-shadow: var(--shadow);
+            transition: top 0.4s ease; z-index: 1000;
+        }
+        .notification.show { top: 20px; }
+
         .date-display {
-            font-size: 1.1rem; font-weight: 600; color: white;
-            background: #2d3436; display: inline-block; padding: 12px 25px;
-            border-radius: 50px; box-shadow: var(--shadow);
+            font-size: 1.4rem; font-weight: 700; color: #0984e3;
+            background: #e1f0fa; display: inline-block; padding: 10px 25px;
+            border-radius: 50px; box-shadow: var(--shadow); margin-bottom: 20px;
         }
 
-        .controls { display: flex; justify-content: center; gap: 10px; margin: 25px 0; flex-wrap: wrap; }
+        /* === CONTROLS === */
+        .controls {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-bottom: 30px; background: var(--card-bg); padding: 20px;
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            align-items: center;
+        }
+
         button {
-            padding: 12px 20px; border: none; border-radius: 12px;
-            background: #2d3436; color: white; cursor: pointer; font-weight: 600;
-            transition: transform 0.1s;
-            flex-grow: 1; /* Helps buttons look better on mobile */
-            max-width: 200px;
+            padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600;
+            cursor: pointer; transition: transform 0.1s, opacity 0.2s; color: white;
+            display: flex; align-items: center; gap: 6px; font-size: 0.95rem;
         }
-        button:active { transform: scale(0.95); }
+        button:active { transform: scale(0.96); }
+        button:hover { opacity: 0.9; }
+
+        .btn-primary { background: #0984e3; }
         .btn-pdf { background: #d63031; }
+        .btn-lazy { background: #f39c12; }
+        .btn-reset { background: #636e72; }
+        .btn-danger { background: #e74c3c; font-size: 0.85rem; padding: 8px 12px; }
 
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 6px solid #dfe6e9; }
-        .card h2 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; }
+        /* === DASHBOARD GRID === */
+        .dashboard-container {
+            background: var(--card-bg); padding: 25px; border-radius: var(--radius); 
+            box-shadow: var(--shadow); margin-bottom: 40px; border: 2px solid #0984e3;
+        }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-color); border-radius: var(--radius); padding: 20px;
+            border-top: 5px solid #ccc; position: relative;
+        }
+        .card h2 { font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0; }
         
-        .shift-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
-        .label { font-weight: 500; color: #636e72; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #ddd; }
+        .row:last-child { border-bottom: none; }
+        .label { font-weight: 500; color: var(--text-muted); }
 
-        .badge { padding: 8px 15px; border-radius: 10px; color: white; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; min-width: 100px; text-align: center; }
+        /* === BADGES === */
+        .badge {
+            padding: 6px 14px; border-radius: 20px; color: white; font-size: 0.85rem;
+            font-weight: bold; text-transform: uppercase; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block; margin-bottom: 4px;
+        }
+        .badge:hover { opacity: 0.8; }
         .badge-aryan { background-color: var(--aryan); }
         .badge-yash { background-color: var(--yash); }
         .badge-shivek { background-color: var(--shivek); }
+        .badge-lazy { background-color: var(--lazy); cursor: default; }
+        .badge-double { border: 2px solid #ff4757; color: #ff4757; background: white; font-size: 0.75rem; }
+
+        /* === MODAL === */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center;
+            align-items: center; z-index: 2000;
+        }
+        .modal {
+            background: white; padding: 25px; border-radius: var(--radius);
+            width: 90%; max-width: 400px; text-align: center; box-shadow: var(--shadow);
+        }
+        .modal h3 { margin-bottom: 15px; }
+        .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .modal select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 100%; }
+
+        /* === HISTORY TABLE === */
+        .history-section {
+            background: white; border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); overflow-x: auto;
+        }
+        .history-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+        th { background: #f8f9fa; color: var(--text-main); font-weight: 600; }
         
-        #offline-status { font-size: 0.8rem; color: #e67e22; margin-top: 10px; display: none; }
+        .help-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-weight: 500; }
+
+        @media (max-width: 600px) {
+            .controls { flex-direction: column; align-items: stretch; }
+            button { justify-content: center; width: 100%; }
+            .history-header { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
 
+<div class="notification" id="notification">Notification message</div>
+
 <div class="container">
     <header>
-        <h1>Monthly Work Report by Arya x Etho AI</h1>
-        <div id="currentDate" class="date-display">...</div>
-        <p id="offline-status">⚠️ Working Offline</p>
+        <h1>Roommate Task Manager</h1>
     </header>
 
     <div class="controls">
-        <button onclick="changeDay(0)">Today</button>
-        <button onclick="changeDay(1)">Next Day ➔</button>
-        <button class="btn-pdf" onclick="generatePDF()">Download PDF</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
+            <button class="btn-reset" onclick="resetToToday()">📅 Today</button>
+            <button class="btn-primary" onclick="simulateNextDay()">⏭️ Next Day</button>
+            <button class="btn-lazy" onclick="toggleLazyDay()">🍕 Lazy Day (Skip Cooking)</button>
+            <button class="btn-pdf" onclick="downloadPDF()">📥 Download Monthly Report</button>
+        </div>
     </div>
 
-    <div class="task-grid">
-        <div class="card" style="border-top-color: #f1c40f;">
-            <h2>🍳 Cooking</h2>
-            <div class="shift-row"><span class="label">Morning</span><span class="badge badge-shivek">Shivek</span></div>
-            <div class="shift-row"><span class="label">Afternoon</span><span class="badge badge-yash">Yash</span></div>
-            <div class="shift-row"><span class="label">Night</span><span class="badge badge-aryan">Aryan</span></div>
-        </div>
+    <p class="help-text">💡 Tip: Click on any member's name badge below to Swap tasks or Mark as Missed.</p>
 
-        <div class="card" style="border-top-color: #00cec9;">
-            <h2>🧼 Dishes</h2>
-            <div class="shift-row"><span class="label">Morning</span><span class="badge badge-yash">Yash</span></div>
-            <div class="shift-row"><span class="label">Afternoon</span><span class="badge badge-aryan">Aryan</span></div>
-            <div class="shift-row"><span class="label">Night</span><span class="badge badge-shivek">Shivek</span></div>
+    <div class="dashboard-container">
+        <div style="text-align: center;">
+            <div id="currentDate" class="date-display">Select a date</div>
         </div>
+        <div class="grid" id="dashboard">
+            </div>
+    </div>
 
-        <div class="card" style="border-top-color: #0984e3;">
-            <h2>💧 Water</h2>
-            <div class="shift-row"><span class="label">Duty Person</span><span id="waterBadge" class="badge">...</span></div>
+    <div class="history-section">
+        <div class="history-header">
+            <h2>📜 30-Day History</h2>
+            <button class="btn-danger" onclick="resetHistory()">🗑️ Reset 30-Day History</button>
         </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Cooking (M / A / N)</th>
+                    <th>Dishes (M / A / N)</th>
+                    <th>Water</th>
+                    <th>Garbage</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                </tbody>
+        </table>
+    </div>
+</div>
 
-        <div class="card" style="border-top-color: #6c5ce7;">
-            <h2>🗑️ Garbage</h2>
-            <div class="shift-row"><span class="label">Duty Person</span><span id="garbageBadge" class="badge">...</span></div>
+<div class="modal-overlay" id="actionModal">
+    <div class="modal">
+        <h3 id="modalTitle">Task Actions</h3>
+        <p>Current Assignee: <strong id="modalCurrentPerson"></strong></p>
+        <div class="modal-actions">
+            <div>
+                <select id="swapSelect">
+                    <option value="">-- Swap With --</option>
+                    <option value="Aryan">Aryan</option>
+                    <option value="Yash">Yash</option>
+                    <option value="Shivek">Shivek</option>
+                </select>
+                <button class="btn-primary" style="width:100%; margin-top:5px;" onclick="executeSwap()">Swap Person</button>
+            </div>
+            <button class="btn-pdf" onclick="executeMissed()">❌ Mark as Missed (Double Duty tmrw)</button>
+            <button class="btn-reset" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 </div>
 
 <script>
-    const BASE_DATE = new Date(2024, 0, 1);
-    let viewDate = new Date();
-    const waterCycle = ['Yash', 'Shivek', 'Aryan'];
-    const garbageCycle = ['Aryan', 'Yash', 'Shivek'];
+    /* =========================================
+       STATE & CORE LOGIC
+       ========================================= */
+    const MEMBERS = ['Aryan', 'Yash', 'Shivek'];
+    const WATER_CYCLE = ['Yash', 'Shivek', 'Aryan'];
+    const GARBAGE_CYCLE = ['Aryan', 'Yash', 'Shivek'];
+    
+    // Fixed reference date
+    const BASE_DATE = new Date(2026, 0, 1); // 1 Jan 2026
 
-    function updateApp() {
-        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        document.getElementById('currentDate').innerText = viewDate.toLocaleDateString(undefined, options);
+    // Default state
+    let state = {
+        currentDate: new Date().toISOString().split('T')[0],
+        overrides: {}, 
+        history: []    
+    };
 
-        const d1 = Date.UTC(BASE_DATE.getFullYear(), BASE_DATE.getMonth(), BASE_DATE.getDate());
-        const d2 = Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
-        const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
-
-        const waterName = waterCycle[((diffDays % 3) + 3) % 3];
-        const garbageName = garbageCycle[((Math.floor(diffDays / 3) % 3) + 3) % 3];
-
-        const w = document.getElementById('waterBadge');
-        w.innerText = waterName;
-        w.className = `badge badge-${waterName.toLowerCase()}`;
-
-        const g = document.getElementById('garbageBadge');
-        g.innerText = garbageName;
-        g.className = `badge badge-${garbageName.toLowerCase()}`;
+    // Load from LocalStorage
+    function loadData() {
+        const saved = localStorage.getItem('roommateTaskStatePro');
+        if (saved) state = JSON.parse(saved);
+        
+        updateUI();
     }
 
-    function changeDay(step) {
-        if (step === 0) viewDate = new Date();
-        else viewDate.setDate(viewDate.getDate() + step);
-        updateApp();
+    function saveData() {
+        localStorage.setItem('roommateTaskStatePro', JSON.stringify(state));
     }
 
-    function generatePDF() {
-        // Safe check to ensure the library is fully loaded
-        if (!window.jspdf || !window.jspdf.jsPDF) {
-            alert("PDF engine is still loading. Please ensure you are connected to the internet and try again in a few seconds.");
-            return;
+    /* Helper Dates */
+    function toLocalYMD(dateObj) {
+        const d = new Date(dateObj);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().split('T')[0];
+    }
+
+    function getMod(n, m) { return ((n % m) + m) % m; }
+
+    /* =========================================
+       TASK CALCULATOR ENGINE
+       ========================================= */
+    function getTasksForDate(dateStr) {
+        const [year, month, day] = dateStr.split('-');
+        const targetDate = new Date(year, month - 1, day);
+        
+        // Calculate days difference from base date (1 Jan 2026)
+        const diffTime = targetDate.getTime() - BASE_DATE.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        // 1. BASE ROTATION LOGIC
+        const waterIndex = getMod(diffDays, 3);
+        const garbageIndex = getMod(Math.floor(diffDays / 3), 3);
+
+        let tasks = {
+            cookM: ['Shivek'], cookA: ['Yash'], cookN: ['Aryan'],
+            dishM: ['Yash'],   dishA: ['Aryan'], dishN: ['Shivek'], 
+            water: [WATER_CYCLE[waterIndex]],
+            garbage: [GARBAGE_CYCLE[garbageIndex]]
+        };
+
+        const dayOverrides = state.overrides[dateStr] || { lazyDay: false, swaps: {}, missed: [] };
+
+        // 2. APPLY LAZY DAY
+        if (dayOverrides.lazyDay) {
+            ['cookM', 'cookA', 'cookN', 'dishM', 'dishA', 'dishN'].forEach(k => tasks[k] = ['Takeout / Skip']);
+        }
+
+        // 3. APPLY SWAPS
+        for (const [taskKey, newPerson] of Object.entries(dayOverrides.swaps || {})) {
+            if (!dayOverrides.lazyDay || !taskKey.startsWith('cook')) {
+                tasks[taskKey] = [newPerson];
+            }
+        }
+
+        // 4. APPLY DOUBLE DUTY
+        const yesterdayDate = new Date(targetDate);
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yStr = toLocalYMD(yesterdayDate);
+        const yOverrides = state.overrides[yStr];
+
+        if (yOverrides && yOverrides.missed) {
+            yOverrides.missed.forEach(missedItem => {
+                const [mTask, mPerson] = missedItem.split('_');
+                if (!dayOverrides.lazyDay || !mTask.startsWith('cook')) {
+                    if (!tasks[mTask].includes(mPerson)) {
+                        tasks[mTask].push(`${mPerson} (Double Duty)`);
+                    }
+                }
+            });
+        }
+
+        return tasks;
+    }
+
+    /* =========================================
+       UI RENDERING
+       ========================================= */
+    function formatDisplayDate(dateStr) {
+        // Formats YYYY-MM-DD into "14 April 2026"
+        const [year, month, day] = dateStr.split('-');
+        const dateObj = new Date(year, month - 1, day);
+        return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function updateUI() {
+        document.getElementById('currentDate').innerText = `🗓️ Duties for: ${formatDisplayDate(state.currentDate)}`;
+
+        const tasks = getTasksForDate(state.currentDate);
+        renderDashboard(tasks);
+        renderHistory();
+        saveData();
+    }
+
+    function createBadges(taskKey, peopleArray) {
+        if (peopleArray[0] === 'Takeout / Skip') {
+            return `<span class="badge badge-lazy">🍕 Skipped</span>`;
         }
         
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const mName = viewDate.toLocaleString('default', { month: 'long' });
-            const year = viewDate.getFullYear();
+        return peopleArray.map(person => {
+            const isDouble = person.includes('Double');
+            const baseName = person.split(' ')[0];
+            const cls = `badge badge-${baseName.toLowerCase()} ${isDouble ? 'badge-double' : ''}`;
+            const clickAction = !isDouble ? `onclick="openModal('${taskKey}', '${baseName}')"` : '';
+            return `<span class="${cls}" ${clickAction}>${person}</span>`;
+        }).join(' ');
+    }
 
-            doc.text(`Work Report: ${mName} ${year}`, 14, 20);
-            const days = new Date(year, viewDate.getMonth() + 1, 0).getDate();
-            const rows = [];
-            
-            for (let i = 1; i <= days; i++) {
-                const d = new Date(year, viewDate.getMonth(), i);
-                const dUTC = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-                const diff = Math.floor((dUTC - Date.UTC(2024, 0, 1)) / (1000 * 60 * 60 * 24));
-                
-                rows.push([
-                    d.toLocaleDateString('en-GB').replace(/\//g, ' '),
-                    "M:Shivek, A:Yash, N:Aryan",
-                    "M:Yash, A:Aryan, N:Shivek",
-                    waterCycle[((diff % 3) + 3) % 3],
-                    garbageCycle[((Math.floor(diff / 3) % 3) + 3) % 3]
-                ]);
-            }
-            
-            doc.autoTable({ 
-                startY: 30, 
-                head: [['Date', 'Cooking', 'Dishes', 'Water', 'Garbage']], 
-                body: rows,
-                theme: 'grid'
-            });
-            
-            doc.save(`Report_${mName}_${year}.pdf`);
-        } catch (error) {
-            alert("An error occurred generating the PDF. Please refresh the page.");
-            console.error(error);
+    function renderDashboard(tasks) {
+        const db = document.getElementById('dashboard');
+        
+        db.innerHTML = `
+            <div class="card" style="border-top-color: #f1c40f;">
+                <h2>🍳 Cooking</h2>
+                <div class="row"><span class="label">Morning</span> <div>${createBadges('cookM', tasks.cookM)}</div></div>
+                <div class="row"><span class="label">Afternoon</span> <div>${createBadges('cookA', tasks.cookA)}</div></div>
+                <div class="row"><span class="label">Night</span> <div>${createBadges('cookN', tasks.cookN)}</div></div>
+            </div>
+
+            <div class="card" style="border-top-color: #3498db;">
+                <h2>🧼 Dishwashing</h2>
+                <div class="row"><span class="label">Morning</span> <div>${createBadges('dishM', tasks.dishM)}</div></div>
+                <div class="row"><span class="label">Afternoon</span> <div>${createBadges('dishA', tasks.dishA)}</div></div>
+                <div class="row"><span class="label">Night</span> <div>${createBadges('dishN', tasks.dishN)}</div></div>
+            </div>
+
+            <div class="card" style="border-top-color: #0984e3;">
+                <h2>🚰 Water Duty</h2>
+                <div class="row"><span class="label">Assigned To</span> <div>${createBadges('water', tasks.water)}</div></div>
+            </div>
+
+            <div class="card" style="border-top-color: #6c5ce7;">
+                <h2>🗑️ Garbage Duty</h2>
+                <div class="row"><span class="label">Assigned To</span> <div>${createBadges('garbage', tasks.garbage)}</div></div>
+            </div>
+        `;
+    }
+
+    function renderHistory() {
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = '';
+        
+        const recentHistory = [...state.history].reverse().slice(0, 30);
+        
+        if (recentHistory.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="5" style="text-align: center; color: #999;">No history available.</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        recentHistory.forEach(record => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${record.date}</strong></td>
+                <td>${record.cook}</td>
+                <td>${record.dish}</td>
+                <td>${record.water}</td>
+                <td>${record.garbage}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    /* =========================================
+       INTERACTIONS & BUTTONS
+       ========================================= */
+    function resetToToday() {
+        const today = toLocalYMD(new Date());
+        state.currentDate = today;
+        updateUI();
+    }
+
+    function simulateNextDay() {
+        recordHistory(state.currentDate);
+
+        const d = new Date(state.currentDate);
+        d.setDate(d.getDate() + 1);
+        state.currentDate = toLocalYMD(d);
+        
+        updateUI();
+        showNotification("📅 Moved to Next Day.");
+    }
+
+    function toggleLazyDay() {
+        initOverrideObj();
+        state.overrides[state.currentDate].lazyDay = !state.overrides[state.currentDate].lazyDay;
+        updateUI();
+        if(state.overrides[state.currentDate].lazyDay) showNotification("🍕 Lazy Day Activated!");
+    }
+
+    function recordHistory(dateStr) {
+        if (state.history.some(h => h.rawDate === dateStr)) return;
+
+        const t = getTasksForDate(dateStr);
+        const clean = (arr) => arr.join(' & ');
+        const dispDate = formatDisplayDate(dateStr);
+        
+        state.history.push({
+            rawDate: dateStr,
+            date: dispDate,
+            cook: `${clean(t.cookM)} / ${clean(t.cookA)} / ${clean(t.cookN)}`,
+            dish: `${clean(t.dishM)} / ${clean(t.dishA)} / ${clean(t.dishN)}`,
+            water: clean(t.water),
+            garbage: clean(t.garbage)
+        });
+
+        if (state.history.length > 30) state.history.shift();
+    }
+
+    function resetHistory() {
+        if (confirm("Are you sure you want to delete all 30-day history data?")) {
+            state.history = [];
+            state.overrides = {}; 
+            saveData();
+            updateUI();
+            showNotification("🗑️ 30-day history has been reset successfully");
         }
     }
 
-    window.addEventListener('offline', () => { document.getElementById('offline-status').style.display = 'block'; });
-    window.addEventListener('online', () => { document.getElementById('offline-status').style.display = 'none'; });
+    function showNotification(msg) {
+        const notif = document.getElementById('notification');
+        notif.innerText = msg;
+        notif.classList.add('show');
+        setTimeout(() => notif.classList.remove('show'), 3000);
+    }
 
-    updateApp();
+    /* =========================================
+       MODAL (SWAP & MISSED TASKS)
+       ========================================= */
+    let activeModalTask = null;
+    let activeModalPerson = null;
+
+    function initOverrideObj() {
+        if (!state.overrides[state.currentDate]) {
+            state.overrides[state.currentDate] = { lazyDay: false, swaps: {}, missed: [] };
+        }
+    }
+
+    function openModal(taskKey, person) {
+        activeModalTask = taskKey;
+        activeModalPerson = person;
+        document.getElementById('modalTitle').innerText = `Edit: ${taskKey.toUpperCase()}`;
+        document.getElementById('modalCurrentPerson').innerText = person;
+        document.getElementById('actionModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('actionModal').style.display = 'none';
+        activeModalTask = null;
+        activeModalPerson = null;
+        document.getElementById('swapSelect').value = "";
+    }
+
+    function executeSwap() {
+        const newPerson = document.getElementById('swapSelect').value;
+        if (!newPerson || newPerson === activeModalPerson) {
+            alert("Select a different person to swap with.");
+            return;
+        }
+
+        initOverrideObj();
+        state.overrides[state.currentDate].swaps[activeModalTask] = newPerson;
+        
+        showNotification(`🔄 Task Swapped to ${newPerson}!`);
+        closeModal();
+        updateUI();
+    }
+
+    function executeMissed() {
+        initOverrideObj();
+        const missedStr = `${activeModalTask}_${activeModalPerson}`;
+        
+        if (!state.overrides[state.currentDate].missed.includes(missedStr)) {
+            state.overrides[state.currentDate].missed.push(missedStr);
+        }
+
+        showNotification(`❌ Marked Missed. ${activeModalPerson} gets Double Duty tomorrow.`);
+        closeModal();
+        updateUI();
+    }
+
+    /* =========================================
+       PDF GENERATION
+       ========================================= */
+    function downloadPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert("PDF library is loading. Please wait a second and try again.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        
+        const [yearStr, monthStr, dayStr] = state.currentDate.split('-');
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr) - 1; 
+        
+        const dObj = new Date(year, month, parseInt(dayStr));
+        const monthName = dObj.toLocaleString('en-GB', { month: 'long' });
+
+        doc.setFontSize(22);
+        doc.setTextColor(45, 52, 54);
+        doc.text("Monthly Roommate Task Report", 14, 20);
+        doc.setFontSize(14);
+        doc.text(`Period: ${monthName} ${year}`, 14, 28);
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const tableData = [];
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const currentLoopMonth = month + 1; 
+            const dateStr = `${year}-${String(currentLoopMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const t = getTasksForDate(dateStr);
+            
+            const loopDateObj = new Date(year, month, i);
+            const pdfDateStr = loopDateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            const clean = (arr) => arr.join(' & ');
+
+            tableData.push([
+                pdfDateStr,
+                `M:${clean(t.cookM)}, A:${clean(t.cookA)}, N:${clean(t.cookN)}`,
+                `M:${clean(t.dishM)}, A:${clean(t.dishA)}, N:${clean(t.dishN)}`,
+                clean(t.water),
+                clean(t.garbage)
+            ]);
+        }
+
+        doc.autoTable({
+            startY: 35,
+            head: [['Date', 'Cooking', 'Dishwashing', 'Water Duty', 'Garbage Duty']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185], fontSize: 10 },
+            styles: { fontSize: 9, cellPadding: 3 },
+            alternateRowStyles: { fillColor: [248, 249, 250] },
+            columnStyles: { 0: { cellWidth: 35 } } 
+        });
+
+        doc.save(`Roommate_Report_${monthName}_${year}.pdf`);
+    }
+
+    /* =========================================
+       INITIALIZATION
+       ========================================= */
+    window.onload = loadData;
+
 </script>
 </body>
 </html>
