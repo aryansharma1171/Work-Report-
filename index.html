@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monthly Work Report by Arya x Etho AI</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2d3436">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js" defer></script>
+    
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --aryan: #0984e3;
+            --yash: #00b894;
+            --shivek: #e67e22;
+            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+            --radius: 15px;
+        }
+
+        /* Scrolling Fixes */
+        html, body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            padding: 20px; 
+            padding-bottom: 80px; /* Extra space to fix bottom cut-off on mobile */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 1.5rem; font-weight: 800; color: #2d3436; margin-bottom: 10px; }
+        
+        .date-display {
+            font-size: 1.1rem; font-weight: 600; color: white;
+            background: #2d3436; display: inline-block; padding: 12px 25px;
+            border-radius: 50px; box-shadow: var(--shadow);
+        }
+
+        .controls { display: flex; justify-content: center; gap: 10px; margin: 25px 0; flex-wrap: wrap; }
+        button {
+            padding: 12px 20px; border: none; border-radius: 12px;
+            background: #2d3436; color: white; cursor: pointer; font-weight: 600;
+            transition: transform 0.1s;
+            flex-grow: 1; /* Helps buttons look better on mobile */
+            max-width: 200px;
+        }
+        button:active { transform: scale(0.95); }
+        .btn-pdf { background: #d63031; }
+
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 6px solid #dfe6e9; }
+        .card h2 { font-size: 1.2rem; margin-bottom: 15px; border-bottom: 2px solid #f1f1f1; padding-bottom: 8px; }
+        
+        .shift-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
+        .label { font-weight: 500; color: #636e72; }
+
+        .badge { padding: 8px 15px; border-radius: 10px; color: white; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; min-width: 100px; text-align: center; }
+        .badge-aryan { background-color: var(--aryan); }
+        .badge-yash { background-color: var(--yash); }
+        .badge-shivek { background-color: var(--shivek); }
+        
+        #offline-status { font-size: 0.8rem; color: #e67e22; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Monthly Work Report by Arya x Etho AI</h1>
+        <div id="currentDate" class="date-display">...</div>
+        <p id="offline-status">⚠️ Working Offline</p>
+    </header>
+
+    <div class="controls">
+        <button onclick="changeDay(0)">Today</button>
+        <button onclick="changeDay(1)">Next Day ➔</button>
+        <button class="btn-pdf" onclick="generatePDF()">Download PDF</button>
+    </div>
+
+    <div class="task-grid">
+        <div class="card" style="border-top-color: #f1c40f;">
+            <h2>🍳 Cooking</h2>
+            <div class="shift-row"><span class="label">Morning</span><span class="badge badge-shivek">Shivek</span></div>
+            <div class="shift-row"><span class="label">Afternoon</span><span class="badge badge-yash">Yash</span></div>
+            <div class="shift-row"><span class="label">Night</span><span class="badge badge-aryan">Aryan</span></div>
+        </div>
+
+        <div class="card" style="border-top-color: #00cec9;">
+            <h2>🧼 Dishes</h2>
+            <div class="shift-row"><span class="label">Morning</span><span class="badge badge-yash">Yash</span></div>
+            <div class="shift-row"><span class="label">Afternoon</span><span class="badge badge-aryan">Aryan</span></div>
+            <div class="shift-row"><span class="label">Night</span><span class="badge badge-shivek">Shivek</span></div>
+        </div>
+
+        <div class="card" style="border-top-color: #0984e3;">
+            <h2>💧 Water</h2>
+            <div class="shift-row"><span class="label">Duty Person</span><span id="waterBadge" class="badge">...</span></div>
+        </div>
+
+        <div class="card" style="border-top-color: #6c5ce7;">
+            <h2>🗑️ Garbage</h2>
+            <div class="shift-row"><span class="label">Duty Person</span><span id="garbageBadge" class="badge">...</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_DATE = new Date(2024, 0, 1);
+    let viewDate = new Date();
+    const waterCycle = ['Yash', 'Shivek', 'Aryan'];
+    const garbageCycle = ['Aryan', 'Yash', 'Shivek'];
+
+    function updateApp() {
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        document.getElementById('currentDate').innerText = viewDate.toLocaleDateString(undefined, options);
+
+        const d1 = Date.UTC(BASE_DATE.getFullYear(), BASE_DATE.getMonth(), BASE_DATE.getDate());
+        const d2 = Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate());
+        const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+
+        const waterName = waterCycle[((diffDays % 3) + 3) % 3];
+        const garbageName = garbageCycle[((Math.floor(diffDays / 3) % 3) + 3) % 3];
+
+        const w = document.getElementById('waterBadge');
+        w.innerText = waterName;
+        w.className = `badge badge-${waterName.toLowerCase()}`;
+
+        const g = document.getElementById('garbageBadge');
+        g.innerText = garbageName;
+        g.className = `badge badge-${garbageName.toLowerCase()}`;
+    }
+
+    function changeDay(step) {
+        if (step === 0) viewDate = new Date();
+        else viewDate.setDate(viewDate.getDate() + step);
+        updateApp();
+    }
+
+    function generatePDF() {
+        // Safe check to ensure the library is fully loaded
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert("PDF engine is still loading. Please ensure you are connected to the internet and try again in a few seconds.");
+            return;
+        }
+        
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const mName = viewDate.toLocaleString('default', { month: 'long' });
+            const year = viewDate.getFullYear();
+
+            doc.text(`Work Report: ${mName} ${year}`, 14, 20);
+            const days = new Date(year, viewDate.getMonth() + 1, 0).getDate();
+            const rows = [];
+            
+            for (let i = 1; i <= days; i++) {
+                const d = new Date(year, viewDate.getMonth(), i);
+                const dUTC = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+                const diff = Math.floor((dUTC - Date.UTC(2024, 0, 1)) / (1000 * 60 * 60 * 24));
+                
+                rows.push([
+                    d.toLocaleDateString('en-GB').replace(/\//g, ' '),
+                    "M:Shivek, A:Yash, N:Aryan",
+                    "M:Yash, A:Aryan, N:Shivek",
+                    waterCycle[((diff % 3) + 3) % 3],
+                    garbageCycle[((Math.floor(diff / 3) % 3) + 3) % 3]
+                ]);
+            }
+            
+            doc.autoTable({ 
+                startY: 30, 
+                head: [['Date', 'Cooking', 'Dishes', 'Water', 'Garbage']], 
+                body: rows,
+                theme: 'grid'
+            });
+            
+            doc.save(`Report_${mName}_${year}.pdf`);
+        } catch (error) {
+            alert("An error occurred generating the PDF. Please refresh the page.");
+            console.error(error);
+        }
+    }
+
+    window.addEventListener('offline', () => { document.getElementById('offline-status').style.display = 'block'; });
+    window.addEventListener('online', () => { document.getElementById('offline-status').style.display = 'none'; });
+
+    updateApp();
+</script>
+</body>
+</html>
