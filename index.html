@@ -3,595 +3,581 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roommate Task Manager</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
+    <title>Etho x Arya ai img resolution Changer</title>
     <style>
-        /* === CSS VARIABLES & THEMING === */
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --text-muted: #636e72;
-            
-            /* Member Colors */
-            --aryan: #3498db;   /* Blue */
-            --yash: #2ecc71;    /* Green */
-            --shivek: #e67e22;  /* Orange */
-            --lazy: #95a5a6;    /* Gray for skipped */
-            
-            --shadow: 0 8px 20px rgba(0,0,0,0.06);
-            --radius: 16px;
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --border: #D1D5DB;
+            --error: #EF4444;
+            --error-hover: #DC2626;
+            --success: #10B981;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --zone-bg: #F9FAFB;
+            --zone-hover: #EEF2FF;
+            --input-bg: #FFFFFF;
+        }
+
+        body.dark-mode {
+            --bg: #111827;
+            --surface: #1F2937;
+            --text: #F9FAFB;
+            --text-light: #9CA3AF;
+            --border: #374151;
+            --zone-bg: #111827;
+            --zone-hover: #374151;
+            --input-bg: #111827;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            padding-bottom: 60px;
-            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
+            background-color: var(--surface);
+            max-width: 800px;
+            width: 100%;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            transition: background-color 0.3s;
         }
 
-        /* === HEADER & NOTIFICATIONS === */
-        header { text-align: center; margin-bottom: 30px; position: relative; }
-        h1 { font-size: 2.2rem; margin-bottom: 10px; color: #2d3436; }
-        
-        .notification {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            background: #2d3436; color: white; padding: 12px 24px;
-            border-radius: 50px; font-weight: bold; box-shadow: var(--shadow);
-            transition: top 0.4s ease; z-index: 1000;
-        }
-        .notification.show { top: 20px; }
-
-        .date-display {
-            font-size: 1.4rem; font-weight: 700; color: #0984e3;
-            background: #e1f0fa; display: inline-block; padding: 10px 25px;
-            border-radius: 50px; box-shadow: var(--shadow); margin-bottom: 20px;
-        }
-
-        /* === CONTROLS === */
-        .controls {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-            margin-bottom: 30px; background: var(--card-bg); padding: 20px;
-            border-radius: var(--radius); box-shadow: var(--shadow);
+        .header-container {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
         }
 
-        button {
-            padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600;
-            cursor: pointer; transition: transform 0.1s, opacity 0.2s; color: white;
-            display: flex; align-items: center; gap: 6px; font-size: 0.95rem;
-        }
-        button:active { transform: scale(0.96); }
-        button:hover { opacity: 0.9; }
-
-        .btn-primary { background: #0984e3; }
-        .btn-pdf { background: #d63031; }
-        .btn-lazy { background: #f39c12; }
-        .btn-reset { background: #636e72; }
-        .btn-danger { background: #e74c3c; font-size: 0.85rem; padding: 8px 12px; }
-
-        /* === DASHBOARD GRID === */
-        .dashboard-container {
-            background: var(--card-bg); padding: 25px; border-radius: var(--radius); 
-            box-shadow: var(--shadow); margin-bottom: 40px; border: 2px solid #0984e3;
+        h1 {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin: 0;
         }
 
-        .grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+        .error-message {
+            background-color: #FEE2E2;
+            color: #B91C1C;
+            padding: 10px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
         }
 
-        .card {
-            background: var(--bg-color); border-radius: var(--radius); padding: 20px;
-            border-top: 5px solid #ccc; position: relative;
+        body.dark-mode .error-message {
+            background-color: #7F1D1D;
+            color: #FECACA;
         }
-        .card h2 { font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0; }
-        
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #ddd; }
-        .row:last-child { border-bottom: none; }
-        .label { font-weight: 500; color: var(--text-muted); }
 
-        /* === BADGES === */
-        .badge {
-            padding: 6px 14px; border-radius: 20px; color: white; font-size: 0.85rem;
-            font-weight: bold; text-transform: uppercase; cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block; margin-bottom: 4px;
+        /* Drag and Drop Zone */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--zone-bg);
         }
-        .badge:hover { opacity: 0.8; }
-        .badge-aryan { background-color: var(--aryan); }
-        .badge-yash { background-color: var(--yash); }
-        .badge-shivek { background-color: var(--shivek); }
-        .badge-lazy { background-color: var(--lazy); cursor: default; }
-        .badge-double { border: 2px solid #ff4757; color: #ff4757; background: white; font-size: 0.75rem; }
 
-        /* === MODAL === */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; justify-content: center;
-            align-items: center; z-index: 2000;
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background-color: var(--zone-hover);
         }
-        .modal {
-            background: white; padding: 25px; border-radius: var(--radius);
-            width: 90%; max-width: 400px; text-align: center; box-shadow: var(--shadow);
-        }
-        .modal h3 { margin-bottom: 15px; }
-        .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .modal select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; width: 100%; }
 
-        /* === HISTORY TABLE === */
-        .history-section {
-            background: white; border-radius: var(--radius); padding: 20px;
-            box-shadow: var(--shadow); overflow-x: auto;
+        .upload-zone p {
+            color: var(--text-light);
+            margin-bottom: 10px;
         }
-        .history-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; flex-wrap: wrap; gap: 10px;
+
+        input[type="file"] {
+            display: none;
         }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
-        th { background: #f8f9fa; color: var(--text-main); font-weight: 600; }
-        
-        .help-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 15px; font-weight: 500; }
+
+        .workspace {
+            display: none;
+            margin-top: 30px;
+        }
+
+        /* Previews */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--zone-bg);
+            position: relative;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .dimensions-text {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
         @media (max-width: 600px) {
-            .controls { flex-direction: column; align-items: stretch; }
-            button { justify-content: center; width: 100%; }
-            .history-header { flex-direction: column; align-items: flex-start; }
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        input[type="number"], select, input[type="range"] {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--text);
+            transition: border-color 0.3s ease, background-color 0.3s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            grid-column: 1 / -1;
+            margin-bottom: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            width: 100%;
+            transition: background-color 0.3s ease;
+            margin-bottom: 10px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        
+        .btn-danger {
+            background-color: var(--error);
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--error-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--zone-hover);
+            color: var(--text);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .result-area {
+            display: none;
+            margin-top: 30px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
         }
     </style>
 </head>
 <body>
 
-<div class="notification" id="notification">Notification message</div>
-
 <div class="container">
-    <header>
-        <h1>Roommate Task Manager</h1>
-    </header>
+    <div class="header-container">
+        <h1>Etho x Arya ai img resolution Changer</h1>
+        <button class="btn btn-secondary" id="themeToggle" style="margin-bottom: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <span id="themeText" style="margin-left: 5px;">Dark Mode</span>
+        </button>
+    </div>
+    
+    <div id="errorMessage" class="error-message"></div>
 
-    <div class="controls">
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
-            <button class="btn-reset" onclick="resetToToday()">📅 Today</button>
-            <button class="btn-primary" onclick="simulateNextDay()">⏭️ Next Day</button>
-            <button class="btn-lazy" onclick="toggleLazyDay()">🍕 Lazy Day (Skip Cooking)</button>
-            <button class="btn-pdf" onclick="downloadPDF()">📥 Download Monthly Report</button>
-        </div>
+    <div class="upload-zone" id="dropZone">
+        <p>Drag & Drop an image here or</p>
+        <button class="btn" style="width: auto;" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Supported formats: JPG, PNG, WEBP</p>
+        <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
     </div>
 
-    <p class="help-text">💡 Tip: Click on any member's name badge below to Swap tasks or Mark as Missed.</p>
-
-    <div class="dashboard-container">
-        <div style="text-align: center;">
-            <div id="currentDate" class="date-display">Select a date</div>
+    <div class="workspace" id="workspace">
+        <div class="preview-container">
+            <img id="originalPreview" class="preview-image" alt="Original Image">
+            <span class="dimensions-text" id="originalDimensions"></span>
+            <button class="btn btn-danger" id="removeBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Remove Image
+            </button>
         </div>
-        <div class="grid" id="dashboard">
+
+        <div class="controls-grid">
+            <div class="input-group">
+                <label for="widthInput">Width (px)</label>
+                <input type="number" id="widthInput" min="1">
             </div>
-    </div>
+            
+            <div class="input-group">
+                <label for="heightInput">Height (px)</label>
+                <input type="number" id="heightInput" min="1">
+            </div>
 
-    <div class="history-section">
-        <div class="history-header">
-            <h2>📜 30-Day History</h2>
-            <button class="btn-danger" onclick="resetHistory()">🗑️ Reset 30-Day History</button>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Cooking (M / A / N)</th>
-                    <th>Dishes (M / A / N)</th>
-                    <th>Water</th>
-                    <th>Garbage</th>
-                </tr>
-            </thead>
-            <tbody id="historyBody">
-                </tbody>
-        </table>
-    </div>
-</div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="aspectCheckbox" checked>
+                <label for="aspectCheckbox" style="margin: 0;">Maintain Aspect Ratio</label>
+            </div>
 
-<div class="modal-overlay" id="actionModal">
-    <div class="modal">
-        <h3 id="modalTitle">Task Actions</h3>
-        <p>Current Assignee: <strong id="modalCurrentPerson"></strong></p>
-        <div class="modal-actions">
-            <div>
-                <select id="swapSelect">
-                    <option value="">-- Swap With --</option>
-                    <option value="Aryan">Aryan</option>
-                    <option value="Yash">Yash</option>
-                    <option value="Shivek">Shivek</option>
+            <div class="input-group">
+                <label for="formatSelect">Output Format</label>
+                <select id="formatSelect">
+                    <option value="image/png">PNG</option>
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/webp">WEBP</option>
                 </select>
-                <button class="btn-primary" style="width:100%; margin-top:5px;" onclick="executeSwap()">Swap Person</button>
             </div>
-            <button class="btn-pdf" onclick="executeMissed()">❌ Mark as Missed (Double Duty tmrw)</button>
-            <button class="btn-reset" onclick="closeModal()">Cancel</button>
+
+            <div class="input-group" id="qualityGroup" style="display: none;">
+                <label for="qualitySlider">Image Quality (JPG/WEBP): <span id="qualityValue">0.9</span></label>
+                <input type="range" id="qualitySlider" min="0.1" max="1" step="0.1" value="0.9">
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn" id="resizeBtn">Resize Image</button>
+            <button class="btn btn-secondary" id="resetBtn" style="width: auto;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                Reset Values
+            </button>
+        </div>
+
+        <div class="result-area" id="resultArea">
+            <h3 style="margin-bottom: 15px; text-align: center;">Resized Result</h3>
+            <div class="preview-container">
+                <img id="resizedPreview" class="preview-image" alt="Resized Image">
+                <span class="dimensions-text" id="resizedDimensions"></span>
+            </div>
+            <button class="btn btn-success" id="downloadBtn">Download Image</button>
         </div>
     </div>
 </div>
 
 <script>
-    /* =========================================
-       STATE & CORE LOGIC
-       ========================================= */
-    const MEMBERS = ['Aryan', 'Yash', 'Shivek'];
-    const WATER_CYCLE = ['Yash', 'Shivek', 'Aryan'];
-    const GARBAGE_CYCLE = ['Aryan', 'Yash', 'Shivek'];
+    // Elements
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const errorMessage = document.getElementById('errorMessage');
     
-    // Fixed reference date
-    const BASE_DATE = new Date(2026, 0, 1); // 1 Jan 2026
+    const originalPreview = document.getElementById('originalPreview');
+    const originalDimensions = document.getElementById('originalDimensions');
+    const removeBtn = document.getElementById('removeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+    
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+    const aspectCheckbox = document.getElementById('aspectCheckbox');
+    
+    const formatSelect = document.getElementById('formatSelect');
+    const qualityGroup = document.getElementById('qualityGroup');
+    const qualitySlider = document.getElementById('qualitySlider');
+    const qualityValue = document.getElementById('qualityValue');
+    
+    const resizeBtn = document.getElementById('resizeBtn');
+    const resultArea = document.getElementById('resultArea');
+    const resizedPreview = document.getElementById('resizedPreview');
+    const resizedDimensions = document.getElementById('resizedDimensions');
+    const downloadBtn = document.getElementById('downloadBtn');
 
-    // Default state
-    let state = {
-        currentDate: new Date().toISOString().split('T')[0],
-        overrides: {}, 
-        history: []    
+    // State
+    let originalImage = new Image();
+    let originalWidth = 0;
+    let originalHeight = 0;
+    let currentFileName = "image";
+    let resizedDataUrl = "";
+    let isDarkMode = false;
+
+    // Utilities
+    const showError = (msg) => {
+        errorMessage.textContent = msg;
+        errorMessage.style.display = 'block';
+        setTimeout(() => errorMessage.style.display = 'none', 5000);
     };
 
-    // Load from LocalStorage
-    function loadData() {
-        const saved = localStorage.getItem('roommateTaskStatePro');
-        if (saved) state = JSON.parse(saved);
+    // Theme Toggle Handler
+    themeToggle.addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark-mode', isDarkMode);
         
-        updateUI();
-    }
+        if (isDarkMode) {
+            themeText.textContent = 'Light Mode';
+            themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+        } else {
+            themeText.textContent = 'Dark Mode';
+            themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        }
+    });
 
-    function saveData() {
-        localStorage.setItem('roommateTaskStatePro', JSON.stringify(state));
-    }
+    // Drag and Drop Handlers
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
 
-    /* Helper Dates */
-    function toLocalYMD(dateObj) {
-        const d = new Date(dateObj);
-        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        return d.toISOString().split('T')[0];
-    }
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
 
-    function getMod(n, m) { return ((n % m) + m) % m; }
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
 
-    /* =========================================
-       TASK CALCULATOR ENGINE
-       ========================================= */
-    function getTasksForDate(dateStr) {
-        const [year, month, day] = dateStr.split('-');
-        const targetDate = new Date(year, month - 1, day);
+    // File Input Handler
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    // File Processing
+    function handleFile(file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            showError('Invalid file type. Please upload a JPG, PNG, or WEBP image.');
+            return;
+        }
+
+        currentFileName = file.name.split('.')[0];
+        const reader = new FileReader();
         
-        // Calculate days difference from base date (1 Jan 2026)
-        const diffTime = targetDate.getTime() - BASE_DATE.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        // 1. BASE ROTATION LOGIC
-        const waterIndex = getMod(diffDays, 3);
-        const garbageIndex = getMod(Math.floor(diffDays / 3), 3);
-
-        let tasks = {
-            cookM: ['Shivek'], cookA: ['Yash'], cookN: ['Aryan'],
-            dishM: ['Yash'],   dishA: ['Aryan'], dishN: ['Shivek'], 
-            water: [WATER_CYCLE[waterIndex]],
-            garbage: [GARBAGE_CYCLE[garbageIndex]]
+        reader.onload = (e) => {
+            originalImage.src = e.target.result;
+            originalImage.onload = () => {
+                originalWidth = originalImage.width;
+                originalHeight = originalImage.height;
+                
+                originalPreview.src = originalImage.src;
+                originalDimensions.textContent = `Original: ${originalWidth} × ${originalHeight} px`;
+                
+                widthInput.value = originalWidth;
+                heightInput.value = originalHeight;
+                
+                dropZone.style.display = 'none';
+                workspace.style.display = 'block';
+                resultArea.style.display = 'none';
+            };
         };
-
-        const dayOverrides = state.overrides[dateStr] || { lazyDay: false, swaps: {}, missed: [] };
-
-        // 2. APPLY LAZY DAY
-        if (dayOverrides.lazyDay) {
-            ['cookM', 'cookA', 'cookN', 'dishM', 'dishA', 'dishN'].forEach(k => tasks[k] = ['Takeout / Skip']);
-        }
-
-        // 3. APPLY SWAPS
-        for (const [taskKey, newPerson] of Object.entries(dayOverrides.swaps || {})) {
-            if (!dayOverrides.lazyDay || !taskKey.startsWith('cook')) {
-                tasks[taskKey] = [newPerson];
-            }
-        }
-
-        // 4. APPLY DOUBLE DUTY
-        const yesterdayDate = new Date(targetDate);
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        const yStr = toLocalYMD(yesterdayDate);
-        const yOverrides = state.overrides[yStr];
-
-        if (yOverrides && yOverrides.missed) {
-            yOverrides.missed.forEach(missedItem => {
-                const [mTask, mPerson] = missedItem.split('_');
-                if (!dayOverrides.lazyDay || !mTask.startsWith('cook')) {
-                    if (!tasks[mTask].includes(mPerson)) {
-                        tasks[mTask].push(`${mPerson} (Double Duty)`);
-                    }
-                }
-            });
-        }
-
-        return tasks;
-    }
-
-    /* =========================================
-       UI RENDERING
-       ========================================= */
-    function formatDisplayDate(dateStr) {
-        // Formats YYYY-MM-DD into "14 April 2026"
-        const [year, month, day] = dateStr.split('-');
-        const dateObj = new Date(year, month - 1, day);
-        return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-
-    function updateUI() {
-        document.getElementById('currentDate').innerText = `🗓️ Duties for: ${formatDisplayDate(state.currentDate)}`;
-
-        const tasks = getTasksForDate(state.currentDate);
-        renderDashboard(tasks);
-        renderHistory();
-        saveData();
-    }
-
-    function createBadges(taskKey, peopleArray) {
-        if (peopleArray[0] === 'Takeout / Skip') {
-            return `<span class="badge badge-lazy">🍕 Skipped</span>`;
-        }
         
-        return peopleArray.map(person => {
-            const isDouble = person.includes('Double');
-            const baseName = person.split(' ')[0];
-            const cls = `badge badge-${baseName.toLowerCase()} ${isDouble ? 'badge-double' : ''}`;
-            const clickAction = !isDouble ? `onclick="openModal('${taskKey}', '${baseName}')"` : '';
-            return `<span class="${cls}" ${clickAction}>${person}</span>`;
-        }).join(' ');
+        reader.onerror = () => showError('Failed to read the file.');
+        reader.readAsDataURL(file);
     }
 
-    function renderDashboard(tasks) {
-        const db = document.getElementById('dashboard');
+    // Remove Image Handler
+    removeBtn.addEventListener('click', () => {
+        originalImage = new Image();
+        originalWidth = 0;
+        originalHeight = 0;
+        currentFileName = "image";
+        resizedDataUrl = "";
+
+        fileInput.value = '';
+        widthInput.value = '';
+        heightInput.value = '';
+        originalPreview.src = '';
+        resizedPreview.src = '';
         
-        db.innerHTML = `
-            <div class="card" style="border-top-color: #f1c40f;">
-                <h2>🍳 Cooking</h2>
-                <div class="row"><span class="label">Morning</span> <div>${createBadges('cookM', tasks.cookM)}</div></div>
-                <div class="row"><span class="label">Afternoon</span> <div>${createBadges('cookA', tasks.cookA)}</div></div>
-                <div class="row"><span class="label">Night</span> <div>${createBadges('cookN', tasks.cookN)}</div></div>
-            </div>
+        workspace.style.display = 'none';
+        resultArea.style.display = 'none';
+        errorMessage.style.display = 'none';
+        dropZone.style.display = 'block';
+    });
 
-            <div class="card" style="border-top-color: #3498db;">
-                <h2>🧼 Dishwashing</h2>
-                <div class="row"><span class="label">Morning</span> <div>${createBadges('dishM', tasks.dishM)}</div></div>
-                <div class="row"><span class="label">Afternoon</span> <div>${createBadges('dishA', tasks.dishA)}</div></div>
-                <div class="row"><span class="label">Night</span> <div>${createBadges('dishN', tasks.dishN)}</div></div>
-            </div>
+    // Reset Values Handler
+    resetBtn.addEventListener('click', () => {
+        if (originalWidth && originalHeight) {
+            widthInput.value = originalWidth;
+            heightInput.value = originalHeight;
+            resultArea.style.display = 'none';
+        }
+    });
 
-            <div class="card" style="border-top-color: #0984e3;">
-                <h2>🚰 Water Duty</h2>
-                <div class="row"><span class="label">Assigned To</span> <div>${createBadges('water', tasks.water)}</div></div>
-            </div>
+    // Aspect Ratio Logic
+    widthInput.addEventListener('input', () => {
+        if (aspectCheckbox.checked && originalWidth > 0) {
+            const ratio = originalHeight / originalWidth;
+            heightInput.value = Math.round(widthInput.value * ratio) || '';
+        }
+    });
 
-            <div class="card" style="border-top-color: #6c5ce7;">
-                <h2>🗑️ Garbage Duty</h2>
-                <div class="row"><span class="label">Assigned To</span> <div>${createBadges('garbage', tasks.garbage)}</div></div>
-            </div>
-        `;
-    }
+    heightInput.addEventListener('input', () => {
+        if (aspectCheckbox.checked && originalHeight > 0) {
+            const ratio = originalWidth / originalHeight;
+            widthInput.value = Math.round(heightInput.value * ratio) || '';
+        }
+    });
 
-    function renderHistory() {
-        const tbody = document.getElementById('historyBody');
-        tbody.innerHTML = '';
-        
-        const recentHistory = [...state.history].reverse().slice(0, 30);
-        
-        if (recentHistory.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td colspan="5" style="text-align: center; color: #999;">No history available.</td>`;
-            tbody.appendChild(tr);
+    // Format UI Logic
+    formatSelect.addEventListener('change', () => {
+        if (formatSelect.value === 'image/png') {
+            qualityGroup.style.display = 'none';
+        } else {
+            qualityGroup.style.display = 'block';
+        }
+    });
+
+    qualitySlider.addEventListener('input', (e) => {
+        qualityValue.textContent = e.target.value;
+    });
+
+    // Resize Logic
+    resizeBtn.addEventListener('click', () => {
+        const width = parseInt(widthInput.value);
+        const height = parseInt(heightInput.value);
+
+        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+            showError('Please enter valid, positive numbers for width and height.');
             return;
         }
 
-        recentHistory.forEach(record => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${record.date}</strong></td>
-                <td>${record.cook}</td>
-                <td>${record.dish}</td>
-                <td>${record.water}</td>
-                <td>${record.garbage}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    /* =========================================
-       INTERACTIONS & BUTTONS
-       ========================================= */
-    function resetToToday() {
-        const today = toLocalYMD(new Date());
-        state.currentDate = today;
-        updateUI();
-    }
-
-    function simulateNextDay() {
-        recordHistory(state.currentDate);
-
-        const d = new Date(state.currentDate);
-        d.setDate(d.getDate() + 1);
-        state.currentDate = toLocalYMD(d);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
         
-        updateUI();
-        showNotification("📅 Moved to Next Day.");
-    }
-
-    function toggleLazyDay() {
-        initOverrideObj();
-        state.overrides[state.currentDate].lazyDay = !state.overrides[state.currentDate].lazyDay;
-        updateUI();
-        if(state.overrides[state.currentDate].lazyDay) showNotification("🍕 Lazy Day Activated!");
-    }
-
-    function recordHistory(dateStr) {
-        if (state.history.some(h => h.rawDate === dateStr)) return;
-
-        const t = getTasksForDate(dateStr);
-        const clean = (arr) => arr.join(' & ');
-        const dispDate = formatDisplayDate(dateStr);
-        
-        state.history.push({
-            rawDate: dateStr,
-            date: dispDate,
-            cook: `${clean(t.cookM)} / ${clean(t.cookA)} / ${clean(t.cookN)}`,
-            dish: `${clean(t.dishM)} / ${clean(t.dishA)} / ${clean(t.dishN)}`,
-            water: clean(t.water),
-            garbage: clean(t.garbage)
-        });
-
-        if (state.history.length > 30) state.history.shift();
-    }
-
-    function resetHistory() {
-        if (confirm("Are you sure you want to delete all 30-day history data?")) {
-            state.history = [];
-            state.overrides = {}; 
-            saveData();
-            updateUI();
-            showNotification("🗑️ 30-day history has been reset successfully");
-        }
-    }
-
-    function showNotification(msg) {
-        const notif = document.getElementById('notification');
-        notif.innerText = msg;
-        notif.classList.add('show');
-        setTimeout(() => notif.classList.remove('show'), 3000);
-    }
-
-    /* =========================================
-       MODAL (SWAP & MISSED TASKS)
-       ========================================= */
-    let activeModalTask = null;
-    let activeModalPerson = null;
-
-    function initOverrideObj() {
-        if (!state.overrides[state.currentDate]) {
-            state.overrides[state.currentDate] = { lazyDay: false, swaps: {}, missed: [] };
-        }
-    }
-
-    function openModal(taskKey, person) {
-        activeModalTask = taskKey;
-        activeModalPerson = person;
-        document.getElementById('modalTitle').innerText = `Edit: ${taskKey.toUpperCase()}`;
-        document.getElementById('modalCurrentPerson').innerText = person;
-        document.getElementById('actionModal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('actionModal').style.display = 'none';
-        activeModalTask = null;
-        activeModalPerson = null;
-        document.getElementById('swapSelect').value = "";
-    }
-
-    function executeSwap() {
-        const newPerson = document.getElementById('swapSelect').value;
-        if (!newPerson || newPerson === activeModalPerson) {
-            alert("Select a different person to swap with.");
-            return;
+        if (formatSelect.value !== 'image/jpeg') {
+            ctx.clearRect(0, 0, width, height);
+        } else {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
         }
 
-        initOverrideObj();
-        state.overrides[state.currentDate].swaps[activeModalTask] = newPerson;
+        ctx.drawImage(originalImage, 0, 0, width, height);
+
+        const format = formatSelect.value;
+        const quality = parseFloat(qualitySlider.value);
         
-        showNotification(`🔄 Task Swapped to ${newPerson}!`);
-        closeModal();
-        updateUI();
-    }
-
-    function executeMissed() {
-        initOverrideObj();
-        const missedStr = `${activeModalTask}_${activeModalPerson}`;
+        resizedDataUrl = canvas.toDataURL(format, quality);
         
-        if (!state.overrides[state.currentDate].missed.includes(missedStr)) {
-            state.overrides[state.currentDate].missed.push(missedStr);
-        }
-
-        showNotification(`❌ Marked Missed. ${activeModalPerson} gets Double Duty tomorrow.`);
-        closeModal();
-        updateUI();
-    }
-
-    /* =========================================
-       PDF GENERATION
-       ========================================= */
-    function downloadPDF() {
-        if (!window.jspdf || !window.jspdf.jsPDF) {
-            alert("PDF library is loading. Please wait a second and try again.");
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
+        resizedPreview.src = resizedDataUrl;
+        resizedDimensions.textContent = `Resized: ${width} × ${height} px`;
+        resultArea.style.display = 'block';
         
-        const [yearStr, monthStr, dayStr] = state.currentDate.split('-');
-        const year = parseInt(yearStr);
-        const month = parseInt(monthStr) - 1; 
+        resultArea.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Download Logic
+    downloadBtn.addEventListener('click', () => {
+        if (!resizedDataUrl) return;
         
-        const dObj = new Date(year, month, parseInt(dayStr));
-        const monthName = dObj.toLocaleString('en-GB', { month: 'long' });
+        const format = formatSelect.value;
+        let ext = 'png';
+        if (format === 'image/jpeg') ext = 'jpg';
+        if (format === 'image/webp') ext = 'webp';
 
-        doc.setFontSize(22);
-        doc.setTextColor(45, 52, 54);
-        doc.text("Monthly Roommate Task Report", 14, 20);
-        doc.setFontSize(14);
-        doc.text(`Period: ${monthName} ${year}`, 14, 28);
-
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const tableData = [];
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            const currentLoopMonth = month + 1; 
-            const dateStr = `${year}-${String(currentLoopMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-            const t = getTasksForDate(dateStr);
-            
-            const loopDateObj = new Date(year, month, i);
-            const pdfDateStr = loopDateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-            
-            const clean = (arr) => arr.join(' & ');
-
-            tableData.push([
-                pdfDateStr,
-                `M:${clean(t.cookM)}, A:${clean(t.cookA)}, N:${clean(t.cookN)}`,
-                `M:${clean(t.dishM)}, A:${clean(t.dishA)}, N:${clean(t.dishN)}`,
-                clean(t.water),
-                clean(t.garbage)
-            ]);
-        }
-
-        doc.autoTable({
-            startY: 35,
-            head: [['Date', 'Cooking', 'Dishwashing', 'Water Duty', 'Garbage Duty']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [41, 128, 185], fontSize: 10 },
-            styles: { fontSize: 9, cellPadding: 3 },
-            alternateRowStyles: { fillColor: [248, 249, 250] },
-            columnStyles: { 0: { cellWidth: 35 } } 
-        });
-
-        doc.save(`Roommate_Report_${monthName}_${year}.pdf`);
-    }
-
-    /* =========================================
-       INITIALIZATION
-       ========================================= */
-    window.onload = loadData;
-
+        const a = document.createElement('a');
+        a.href = resizedDataUrl;
+        a.download = `${currentFileName}-resized.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
 </script>
+
 </body>
 </html>
